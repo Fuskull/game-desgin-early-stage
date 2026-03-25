@@ -1,0 +1,40 @@
+# Love2D / Lua
+*.love
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor Files
+.vscode/
+.idea/
+*.sublime-*
+
+# Temporary Files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Logs
+*.log
+
+# Custom Level Files (optional - uncomment if you don't want to share custom levels)
+# custom_level.lua
+
+# Windows Executables (if you build standalone)
+*.exe
+*.dll
+
+# Build Output
+build/
+dist/
+release/
+
+# Other
+Red Giant Magic Bullet Suite 2025.0 x64/
+*.rar
+*.exe
+REDRAGON Gaming Mouse.exe
+dot_product_demo.py

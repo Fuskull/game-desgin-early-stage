@@ -103,7 +103,7 @@ function weapons.attack(playerX, playerY, mouseX, mouseY)
 end
 
 function weapons.meleeAttack(playerX, playerY, mouseX, mouseY)
-    if weapons.meleeCooldown > 0 then return end
+    if weapons.meleeCooldown > 0 then return nil end
     
     weapons.meleeCooldown = weapons.meleeCooldownTime
     
@@ -127,11 +127,48 @@ function weapons.meleeAttack(playerX, playerY, mouseX, mouseY)
         range = weapons.meleeRange
     }
     
-    -- check if hit any enemy
-    local hitX = playerX + dx * weapons.meleeRange
-    local hitY = playerY + dy * weapons.meleeRange
+    -- calculate attack center point
+    local attackX = playerX + 20
+    local attackY = playerY + 20
     
-    return {x = hitX, y = hitY, range = weapons.meleeRange, damage = weapons.meleeDamage}
+    -- check and damage enemies directly
+    local enemiesHit = {}
+    
+    -- check turrets
+    if enemy and enemy.list then
+        for i = #enemy.list, 1, -1 do
+            local e = enemy.list[i]
+            local distX = (e.x + e.width/2) - attackX
+            local distY = (e.y + e.height/2) - attackY
+            local distance = math.sqrt(distX * distX + distY * distY)
+            
+            if distance < weapons.meleeRange then
+                local dead = enemy.takeDamage(e, weapons.meleeDamage)
+                if dead then
+                    table.insert(enemiesHit, {type = "enemy", index = i})
+                end
+            end
+        end
+    end
+    
+    -- check hunters
+    if hunter and hunter.list then
+        for i = #hunter.list, 1, -1 do
+            local h = hunter.list[i]
+            local distX = (h.x + h.width/2) - attackX
+            local distY = (h.y + h.height/2) - attackY
+            local distance = math.sqrt(distX * distX + distY * distY)
+            
+            if distance < weapons.meleeRange then
+                local dead = hunter.takeDamage(h, weapons.meleeDamage)
+                if dead then
+                    table.insert(enemiesHit, {type = "hunter", index = i})
+                end
+            end
+        end
+    end
+    
+    return enemiesHit
 end
 
 function weapons.gunAttack(playerX, playerY, mouseX, mouseY)

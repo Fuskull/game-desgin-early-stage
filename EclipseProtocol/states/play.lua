@@ -259,58 +259,50 @@ function play.mousepressed(x, y, button)
     end
     
     if button == 1 then  -- left click
-        local attackData = weapons.attack(player.x, player.y, x, y)
-        
-        -- if melee attack, check for hits
-        if attackData and weapons.currentWeapon == weapons.MELEE then
-            -- check melee hits on patrol enemies
-            for i = #enemy.list, 1, -1 do
-                local e = enemy.list[i]
-                local dx = e.x + e.width/2 - attackData.x
-                local dy = e.y + e.height/2 - attackData.y
-                local distance = math.sqrt(dx * dx + dy * dy)
-                
-                if distance < attackData.range then
-                    local dead = enemy.takeDamage(e, attackData.damage)
-                    if dead then
-                        table.remove(enemy.list, i)
-                        -- drop xp
-                        pickups.spawnXP(e.x, e.y, 15)
-                        -- chance for health pack
-                        if math.random() < 0.3 then
-                            pickups.spawnHealthPack(e.x + 20, e.y, math.random() < 0.2)
-                        end
-                        -- chance for ammo
-                        if math.random() < 0.4 then
-                            pickups.spawnAmmo(e.x - 20, e.y)
-                        end
-                    end
-                end
-            end
+        if weapons.currentWeapon == weapons.MELEE then
+            -- melee attack now handles damage internally
+            local enemiesHit = weapons.attack(player.x, player.y, x, y)
             
-            -- check melee hits on hunters
-            for i = #hunter.list, 1, -1 do
-                local h = hunter.list[i]
-                local dx = h.x + h.width/2 - attackData.x
-                local dy = h.y + h.height/2 - attackData.y
-                local distance = math.sqrt(dx * dx + dy * dy)
-                
-                if distance < attackData.range then
-                    local dead = hunter.takeDamage(h, attackData.damage)
-                    if dead then
-                        table.remove(hunter.list, i)
-                        -- drop more xp
-                        pickups.spawnXP(h.x, h.y, 25)
-                        -- better drop chances
-                        if math.random() < 0.5 then
-                            pickups.spawnHealthPack(h.x + 20, h.y, math.random() < 0.3)
+            -- spawn pickups for killed enemies
+            if enemiesHit and #enemiesHit > 0 then
+                for _, hit in ipairs(enemiesHit) do
+                    if hit.type == "enemy" then
+                        local e = enemy.list[hit.index]
+                        if e then
+                            -- drop xp
+                            pickups.spawnXP(e.x, e.y, 15)
+                            -- chance for health pack
+                            if math.random() < 0.3 then
+                                pickups.spawnHealthPack(e.x + 20, e.y, math.random() < 0.2)
+                            end
+                            -- chance for ammo
+                            if math.random() < 0.4 then
+                                pickups.spawnAmmo(e.x - 20, e.y)
+                            end
+                            -- remove enemy
+                            table.remove(enemy.list, hit.index)
                         end
-                        if math.random() < 0.6 then
-                            pickups.spawnAmmo(h.x - 20, h.y)
+                    elseif hit.type == "hunter" then
+                        local h = hunter.list[hit.index]
+                        if h then
+                            -- drop more xp
+                            pickups.spawnXP(h.x, h.y, 25)
+                            -- better drop chances
+                            if math.random() < 0.5 then
+                                pickups.spawnHealthPack(h.x + 20, h.y, math.random() < 0.3)
+                            end
+                            if math.random() < 0.6 then
+                                pickups.spawnAmmo(h.x - 20, h.y)
+                            end
+                            -- remove hunter
+                            table.remove(hunter.list, hit.index)
                         end
                     end
                 end
             end
+        else
+            -- gun attack
+            weapons.attack(player.x, player.y, x, y)
         end
     end
 end
