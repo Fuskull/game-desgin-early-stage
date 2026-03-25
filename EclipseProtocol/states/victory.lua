@@ -8,9 +8,11 @@ function victory.enter()
     playState = stateManager.states["play"]
     
     -- load victory sound
-    local success, sound = pcall(love.audio.newSource, "assets/sounds/victory.wav", "static")
+    local success, sound = pcall(love.audio.newSource, "assets/sounds/Victory Sound Effect.mp3", "static")
     if success then
         sound:play()
+    else
+        print("Warning: Victory sound not found")
     end
 end
 

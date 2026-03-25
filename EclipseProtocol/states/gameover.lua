@@ -8,9 +8,11 @@ function gameover.enter()
     playState = stateManager.states["play"]
     
     -- load game over sound
-    local success, sound = pcall(love.audio.newSource, "assets/sounds/gameover.wav", "static")
+    local success, sound = pcall(love.audio.newSource, "assets/sounds/lose sound effect.mp3", "static")
     if success then
         sound:play()
+    else
+        print("Warning: Game over sound not found")
     end
 end
 
