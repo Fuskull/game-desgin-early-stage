@@ -9,6 +9,18 @@ function world.init()
     world.width = 800
     world.height = 600
     enemy.init()  -- initialize turret sprites
+    
+    -- load wall texture
+    love.graphics.setDefaultFilter("nearest", "nearest")
+    local success, wallImg = pcall(love.graphics.newImage, "assets/images/cartoon-stone-wall-texture-with-spider-web-for-2d-game-halloween-texture-vector.jpg")
+    if success then
+        world.wallTexture = wallImg
+        world.wallTexture:setWrap("repeat", "repeat")
+    else
+        world.wallTexture = nil
+        print("Warning: wall texture not found")
+    end
+    
     world.generateRoom()
 end
 
@@ -98,12 +110,30 @@ function world.draw()
     -- draw walls
     if world.walls then
         for i, wall in ipairs(world.walls) do
-            -- ensure wall has color property
-            local wallColor = wall.color or {0.4, 0.4, 0.4}
-            love.graphics.setColor(wallColor)
-            love.graphics.rectangle("fill", wall.x, wall.y, wall.width, wall.height)
-            love.graphics.setColor(0.6, 0.6, 0.6)
-            love.graphics.rectangle("line", wall.x, wall.y, wall.width, wall.height)
+            if world.wallTexture then
+                -- draw textured wall
+                love.graphics.setColor(1, 1, 1)
+                
+                -- create a quad for the wall size
+                local quad = love.graphics.newQuad(
+                    0, 0, 
+                    wall.width, wall.height,
+                    world.wallTexture:getWidth(), world.wallTexture:getHeight()
+                )
+                
+                love.graphics.draw(world.wallTexture, quad, wall.x, wall.y)
+                
+                -- draw border
+                love.graphics.setColor(0.3, 0.3, 0.3)
+                love.graphics.rectangle("line", wall.x, wall.y, wall.width, wall.height)
+            else
+                -- fallback: draw solid color walls
+                local wallColor = wall.color or {0.4, 0.4, 0.4}
+                love.graphics.setColor(wallColor)
+                love.graphics.rectangle("fill", wall.x, wall.y, wall.width, wall.height)
+                love.graphics.setColor(0.6, 0.6, 0.6)
+                love.graphics.rectangle("line", wall.x, wall.y, wall.width, wall.height)
+            end
         end
     end
     
