@@ -30,6 +30,16 @@ function world.init()
         print("Warning: door texture not found")
     end
     
+    -- load grass background texture
+    local successGrass, grassImg = pcall(love.graphics.newImage, "assets/images/grass.jpg")
+    if successGrass then
+        world.grassTexture = grassImg
+        world.grassTexture:setWrap("repeat", "repeat")
+    else
+        world.grassTexture = nil
+        print("Warning: grass texture not found")
+    end
+    
     world.generateRoom()
 end
 
@@ -112,6 +122,28 @@ function world.update()
 end
 
 function world.draw()
+    -- draw grass background
+    if world.grassTexture then
+        love.graphics.setColor(1, 1, 1)
+        
+        -- tile the grass texture to fill the screen
+        local grassWidth = world.grassTexture:getWidth()
+        local grassHeight = world.grassTexture:getHeight()
+        
+        local tilesX = math.ceil(world.width / grassWidth)
+        local tilesY = math.ceil(world.height / grassHeight)
+        
+        for tx = 0, tilesX - 1 do
+            for ty = 0, tilesY - 1 do
+                love.graphics.draw(world.grassTexture, tx * grassWidth, ty * grassHeight)
+            end
+        end
+    else
+        -- fallback: draw dark background
+        love.graphics.setColor(0.1, 0.1, 0.1)
+        love.graphics.rectangle("fill", 0, 0, world.width, world.height)
+    end
+    
     -- draw room boundries
     love.graphics.setColor(0.3, 0.3, 0.3)
     love.graphics.rectangle("line", 0, 0, world.width, world.height)
