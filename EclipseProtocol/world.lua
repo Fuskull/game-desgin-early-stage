@@ -21,6 +21,15 @@ function world.init()
         print("Warning: wall texture not found")
     end
     
+    -- load door texture
+    local successDoor, doorImg = pcall(love.graphics.newImage, "assets/images/door.png")
+    if successDoor then
+        world.doorTexture = doorImg
+    else
+        world.doorTexture = nil
+        print("Warning: door texture not found")
+    end
+    
     world.generateRoom()
 end
 
@@ -35,8 +44,8 @@ function world.generateRoom()
     world.door = {
         x = world.width - 80,
         y = world.height / 2 - 30,
-        width = 60,
-        height = 60,
+        width = 120,  -- doubled from 60
+        height = 120,  -- doubled from 60
         color = {0.2, 0.8, 0.2},
         visible = false  -- NEW: hidden until room cleared
     }
@@ -139,11 +148,25 @@ function world.draw()
     
     -- draw door (only if visible)
     if world.door and world.door.visible then
-        love.graphics.setColor(world.door.color)
-        love.graphics.rectangle("fill", world.door.x, world.door.y, world.door.width, world.door.height)
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.rectangle("line", world.door.x, world.door.y, world.door.width, world.door.height)
-        love.graphics.print("EXIT", world.door.x + 10, world.door.y + 20)
+        if world.doorTexture then
+            -- draw door texture
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.draw(
+                world.doorTexture,
+                world.door.x, world.door.y,
+                0,  -- rotation
+                world.door.width / world.doorTexture:getWidth(),  -- scale x
+                world.door.height / world.doorTexture:getHeight(),  -- scale y
+                0, 0  -- origin
+            )
+        else
+            -- fallback: draw colored rectangle
+            love.graphics.setColor(world.door.color)
+            love.graphics.rectangle("fill", world.door.x, world.door.y, world.door.width, world.door.height)
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.rectangle("line", world.door.x, world.door.y, world.door.width, world.door.height)
+            love.graphics.print("EXIT", world.door.x + 10, world.door.y + 20)
+        end
     else
         -- show message where door will be
         love.graphics.setColor(0.5, 0.5, 0.5, 0.5)
