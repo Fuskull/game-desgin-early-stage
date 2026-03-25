@@ -259,16 +259,25 @@ function play.mousepressed(x, y, button)
     end
     
     if button == 1 then  -- left click
-        if weapons.currentWeapon == weapons.MELEE then
-            -- melee attack now handles damage internally
-            local enemiesHit = weapons.attack(player.x, player.y, x, y)
+        if weapons.currentWeapon == weapons.GUN then
+            -- gun attacks use mouse position
+            weapons.attack(player.x, player.y, x, y, player.direction)
+        elseif weapons.currentWeapon == weapons.MELEE then
+            -- melee attacks check nearby enemies
+            local attackData = weapons.attack(player.x, player.y, nil, nil, player.direction)
             
-            -- spawn pickups for killed enemies
-            if enemiesHit and #enemiesHit > 0 then
-                for _, hit in ipairs(enemiesHit) do
-                    if hit.type == "enemy" then
-                        local e = enemy.list[hit.index]
-                        if e then
+            if attackData then
+                -- check melee hits on enemies (check if enemy is close to player)
+                for i = #enemy.list, 1, -1 do
+                    local e = enemy.list[i]
+                    local dx = (e.x + e.width/2) - (player.x + player.width/2)
+                    local dy = (e.y + e.height/2) - (player.y + player.height/2)
+                    local distance = math.sqrt(dx * dx + dy * dy)
+                    
+                    if distance < attackData.range then
+                        local dead = enemy.takeDamage(e, attackData.damage)
+                        if dead then
+                            table.remove(enemy.list, i)
                             -- drop xp
                             pickups.spawnXP(e.x, e.y, 15)
                             -- chance for health pack
@@ -279,12 +288,21 @@ function play.mousepressed(x, y, button)
                             if math.random() < 0.4 then
                                 pickups.spawnAmmo(e.x - 20, e.y)
                             end
-                            -- remove enemy
-                            table.remove(enemy.list, hit.index)
                         end
-                    elseif hit.type == "hunter" then
-                        local h = hunter.list[hit.index]
-                        if h then
+                    end
+                end
+                
+                -- check melee hits on hunters
+                for i = #hunter.list, 1, -1 do
+                    local h = hunter.list[i]
+                    local dx = (h.x + h.width/2) - (player.x + player.width/2)
+                    local dy = (h.y + h.height/2) - (player.y + player.height/2)
+                    local distance = math.sqrt(dx * dx + dy * dy)
+                    
+                    if distance < attackData.range then
+                        local dead = hunter.takeDamage(h, attackData.damage)
+                        if dead then
+                            table.remove(hunter.list, i)
                             -- drop more xp
                             pickups.spawnXP(h.x, h.y, 25)
                             -- better drop chances
@@ -294,15 +312,10 @@ function play.mousepressed(x, y, button)
                             if math.random() < 0.6 then
                                 pickups.spawnAmmo(h.x - 20, h.y)
                             end
-                            -- remove hunter
-                            table.remove(hunter.list, hit.index)
                         end
                     end
                 end
             end
-        else
-            -- gun attack
-            weapons.attack(player.x, player.y, x, y)
         end
     end
 end

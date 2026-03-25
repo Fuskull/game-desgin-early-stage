@@ -14,14 +14,18 @@ function weapons.init()
     weapons.gunCooldown = 0
     weapons.bullets = {}
     
+    -- base damage values
+    weapons.baseMeleeDamage = 36  -- 1.8x gun damage (20 * 1.8 = 36)
+    weapons.baseGunDamage = 20
+    
     -- melee stats
     weapons.meleeRange = 60
-    weapons.meleeDamage = 50  -- INCREASED from 30
+    weapons.meleeDamage = weapons.baseMeleeDamage
     weapons.meleeCooldownTime = 0.5
     weapons.meleeSwing = nil  -- visual swing effect
     
     -- gun stats with magazine system
-    weapons.gunDamage = 20
+    weapons.gunDamage = weapons.baseGunDamage
     weapons.gunCooldownTime = 0.3
     weapons.bulletSpeed = 400
     weapons.magazineSize = 5  -- NEW: 5 bullets per magazine
@@ -94,27 +98,29 @@ function weapons.switchWeapon()
     end
 end
 
-function weapons.attack(playerX, playerY, mouseX, mouseY)
+function weapons.attack(playerX, playerY, mouseX, mouseY, direction)
     if weapons.currentWeapon == weapons.MELEE then
-        weapons.meleeAttack(playerX, playerY, mouseX, mouseY)
+        return weapons.meleeAttack(playerX, playerY, direction)
     else
         weapons.gunAttack(playerX, playerY, mouseX, mouseY)
     end
 end
 
-function weapons.meleeAttack(playerX, playerY, mouseX, mouseY)
-    if weapons.meleeCooldown > 0 then return nil end
+function weapons.meleeAttack(playerX, playerY, direction)
+    if weapons.meleeCooldown > 0 then return end
     
     weapons.meleeCooldown = weapons.meleeCooldownTime
     
-    -- calculate attack direction
-    local dx = mouseX - playerX
-    local dy = mouseY - playerY
-    local length = math.sqrt(dx * dx + dy * dy)
-    
-    if length > 0 then
-        dx = dx / length
-        dy = dy / length
+    -- calculate attack direction based on player facing direction
+    local dx, dy = 0, 0
+    if direction == "up" then
+        dy = -1
+    elseif direction == "down" then
+        dy = 1
+    elseif direction == "left" then
+        dx = -1
+    elseif direction == "right" then
+        dx = 1
     end
     
     -- create visual swing effect
@@ -127,48 +133,15 @@ function weapons.meleeAttack(playerX, playerY, mouseX, mouseY)
         range = weapons.meleeRange
     }
     
-    -- calculate attack center point
-    local attackX = playerX + 20
-    local attackY = playerY + 20
-    
-    -- check and damage enemies directly
-    local enemiesHit = {}
-    
-    -- check turrets
-    if enemy and enemy.list then
-        for i = #enemy.list, 1, -1 do
-            local e = enemy.list[i]
-            local distX = (e.x + e.width/2) - attackX
-            local distY = (e.y + e.height/2) - attackY
-            local distance = math.sqrt(distX * distX + distY * distY)
-            
-            if distance < weapons.meleeRange then
-                local dead = enemy.takeDamage(e, weapons.meleeDamage)
-                if dead then
-                    table.insert(enemiesHit, {type = "enemy", index = i})
-                end
-            end
-        end
-    end
-    
-    -- check hunters
-    if hunter and hunter.list then
-        for i = #hunter.list, 1, -1 do
-            local h = hunter.list[i]
-            local distX = (h.x + h.width/2) - attackX
-            local distY = (h.y + h.height/2) - attackY
-            local distance = math.sqrt(distX * distX + distY * distY)
-            
-            if distance < weapons.meleeRange then
-                local dead = hunter.takeDamage(h, weapons.meleeDamage)
-                if dead then
-                    table.insert(enemiesHit, {type = "hunter", index = i})
-                end
-            end
-        end
-    end
-    
-    return enemiesHit
+    -- return attack data for collision checking
+    return {
+        x = playerX + 20,
+        y = playerY + 20,
+        dirX = dx,
+        dirY = dy,
+        range = weapons.meleeRange,
+        damage = weapons.meleeDamage
+    }
 end
 
 function weapons.gunAttack(playerX, playerY, mouseX, mouseY)
@@ -311,4 +284,9 @@ function weapons.checkBulletCollision(entity)
         end
     end
     return false, 0
+end
+
+function weapons.applyDamageMultiplier(multiplier)
+    weapons.meleeDamage = math.floor(weapons.baseMeleeDamage * multiplier)
+    weapons.gunDamage = math.floor(weapons.baseGunDamage * multiplier)
 end

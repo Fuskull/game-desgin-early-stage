@@ -17,6 +17,7 @@ function progression.init()
     progression.dashSpeed = 500  -- dash speed (changed from dashDistance)
     progression.dashDuration = 0.3  -- dash duration
     progression.moveSpeed = 200
+    progression.weaponDamageMultiplier = 1.0  -- NEW: damage multiplier for all weapons
     
     -- upgrade state
     progression.showUpgradeMenu = false
@@ -120,6 +121,14 @@ function progression.generateUpgradeOptions()
             description = "Regenerate energy faster",
             apply = function()
                 player.energyRegen = player.energyRegen + 5
+            end
+        },
+        {
+            name = "Weapon Damage +20%",
+            description = "Increase all weapon damage",
+            apply = function()
+                progression.weaponDamageMultiplier = progression.weaponDamageMultiplier + 0.2
+                weapons.applyDamageMultiplier(progression.weaponDamageMultiplier)
             end
         }
     }
