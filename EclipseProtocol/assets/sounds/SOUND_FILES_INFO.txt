@@ -1,0 +1,33 @@
+Sound Files Needed for Phase 2
+================================
+
+Place the following sound files in this directory:
+
+REQUIRED:
+---------
+1. hit.wav       - Player takes damage sound
+2. dash.wav      - Dash ability sound
+3. music.mp3     - Background music (looping)
+
+OPTIONAL (for extra polish):
+-----------------------------
+4. gameover.wav  - Game over sound
+5. victory.wav   - Victory sound
+6. collect.wav   - Item collection sound
+
+Where to get free sounds:
+-------------------------
+- freesound.org
+- opengameart.org
+- bfxr.net (generate your own)
+- sfxr.me (online generator)
+
+The game will run without these files, but sounds will be disabled.
+Error messages will appear in console if files are missing.
+
+Tips:
+-----
+- Keep files small (under 1MB each)
+- Use .wav for sound effects (better for short sounds)
+- Use .mp3 or .ogg for music (better compression)
+- Test volume levels in-game
