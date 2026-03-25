@@ -111,40 +111,17 @@ function world.draw()
     if world.walls then
         for i, wall in ipairs(world.walls) do
             if world.wallTexture then
-                -- draw textured wall with tiling
+                -- draw textured wall stretched to fit
                 love.graphics.setColor(1, 1, 1)
                 
-                -- scale down the texture and tile it
-                local textureScale = 0.15  -- make texture smaller (15% of original size)
-                local scaledWidth = world.wallTexture:getWidth() * textureScale
-                local scaledHeight = world.wallTexture:getHeight() * textureScale
-                
-                -- calculate how many times to repeat the texture
-                local tilesX = math.ceil(wall.width / scaledWidth)
-                local tilesY = math.ceil(wall.height / scaledHeight)
-                
-                -- draw tiled texture
-                for tx = 0, tilesX - 1 do
-                    for ty = 0, tilesY - 1 do
-                        local drawX = wall.x + (tx * scaledWidth)
-                        local drawY = wall.y + (ty * scaledHeight)
-                        
-                        -- clip to wall bounds
-                        local drawWidth = math.min(scaledWidth, wall.x + wall.width - drawX)
-                        local drawHeight = math.min(scaledHeight, wall.y + wall.height - drawY)
-                        
-                        if drawWidth > 0 and drawHeight > 0 then
-                            love.graphics.draw(
-                                world.wallTexture,
-                                drawX, drawY,
-                                0,  -- rotation
-                                textureScale,  -- scale x
-                                textureScale,  -- scale y
-                                0, 0  -- origin
-                            )
-                        end
-                    end
-                end
+                love.graphics.draw(
+                    world.wallTexture,
+                    wall.x, wall.y,
+                    0,  -- rotation
+                    wall.width / world.wallTexture:getWidth(),  -- scale x to fit wall width
+                    wall.height / world.wallTexture:getHeight(),  -- scale y to fit wall height
+                    0, 0  -- origin
+                )
                 
                 -- draw border
                 love.graphics.setColor(0.3, 0.3, 0.3)
