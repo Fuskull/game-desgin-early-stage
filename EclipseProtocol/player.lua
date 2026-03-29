@@ -56,59 +56,40 @@ function player.load()
     player.direction = "down"  -- current facing direction
     player.isMoving = false
     
-    -- load sprite sheets (melee and gun versions)
-    local successMelee, meleeSheet = pcall(love.graphics.newImage, "assets/images/player-sheet.png")
-    local successGun, gunSheet = pcall(love.graphics.newImage, "assets/images/player-sheet gun.png")
+    -- load new sprite sheet (robocharacter)
+    local successRobo, roboSheet = pcall(love.graphics.newImage, "assets/images/robocharacter.png")
     
-    if successMelee and player.anim8 then
-        player.spriteSheetMelee = meleeSheet
-        player.spriteWidth = 12
-        player.spriteHeight = 18
+    if successRobo and player.anim8 then
+        player.spriteSheet = roboSheet
+        player.spriteWidth = 189
+        player.spriteHeight = 209
         
-        -- create grid for melee animations
-        player.gridMelee = player.anim8.newGrid(
+        -- create grid for animations (7 columns, 4 rows)
+        player.grid = player.anim8.newGrid(
             player.spriteWidth, 
             player.spriteHeight, 
-            meleeSheet:getWidth(), 
-            meleeSheet:getHeight()
+            roboSheet:getWidth(), 
+            roboSheet:getHeight()
         )
         
-        -- create melee animations (4 frames per direction)
-        player.animationsMelee = {}
-        player.animationsMelee.down = player.anim8.newAnimation(player.gridMelee('1-4', 1), 0.2)
-        player.animationsMelee.left = player.anim8.newAnimation(player.gridMelee('1-4', 2), 0.2)
-        player.animationsMelee.right = player.anim8.newAnimation(player.gridMelee('1-4', 3), 0.2)
-        player.animationsMelee.up = player.anim8.newAnimation(player.gridMelee('1-4', 4), 0.2)
-    else
-        player.spriteSheetMelee = nil
-        print("Warning: player-sheet.png not found or anim8 missing.")
-    end
-    
-    if successGun and player.anim8 then
-        player.spriteSheetGun = gunSheet
+        -- create animations based on weapon type
+        player.animations = {}
         
-        -- create grid for gun animations
-        player.gridGun = player.anim8.newGrid(
-            player.spriteWidth, 
-            player.spriteHeight, 
-            gunSheet:getWidth(), 
-            gunSheet:getHeight()
-        )
+        -- row 1: gun animations (walking frames 1-5, dashing frames 6-7)
+        player.animations.gun = {}
+        player.animations.gun.walk = player.anim8.newAnimation(player.grid('1-5', 1), 0.15)
+        player.animations.gun.dash = player.anim8.newAnimation(player.grid('6-7', 1), 0.15)
         
-        -- create gun animations (4 frames per direction)
-        player.animationsGun = {}
-        player.animationsGun.down = player.anim8.newAnimation(player.gridGun('1-4', 1), 0.2)
-        player.animationsGun.left = player.anim8.newAnimation(player.gridGun('1-4', 2), 0.2)
-        player.animationsGun.right = player.anim8.newAnimation(player.gridGun('1-4', 3), 0.2)
-        player.animationsGun.up = player.anim8.newAnimation(player.gridGun('1-4', 4), 0.2)
+        -- row 2: melee/knife animations (walking frames 1-5, dashing frames 6-7)
+        player.animations.melee = {}
+        player.animations.melee.walk = player.anim8.newAnimation(player.grid('1-5', 2), 0.15)
+        player.animations.melee.dash = player.anim8.newAnimation(player.grid('6-7', 2), 0.15)
+        
+        -- set initial animation
+        player.currentAnim = player.animations.melee.walk
     else
-        player.spriteSheetGun = nil
-        print("Warning: player-sheet gun.png not found or anim8 missing.")
-    end
-    
-    -- set initial animation
-    if player.animationsMelee then
-        player.currentAnim = player.animationsMelee.down
+        player.spriteSheet = nil
+        print("Warning: robocharacter.png not found or anim8 missing.")
     end
     
     -- load sound efect (with error handeling)
@@ -244,31 +225,34 @@ function player.update(dt)
     end
     
     -- update animation based on weapon type
-    if player.animationsMelee and player.animationsGun then
+    if player.animations then
         -- choose animation set based on current weapon
         local animSet = nil
         if weapons and weapons.currentWeapon == weapons.MELEE then
-            animSet = player.animationsMelee
+            animSet = player.animations.melee
         else
-            animSet = player.animationsGun
+            animSet = player.animations.gun
         end
         
-        -- update current animation
+        -- update current animation based on state
         if animSet then
-            player.currentAnim = animSet[player.direction]
-            
-            if player.isMoving or player.isDashing then
+            if player.isDashing then
+                player.currentAnim = animSet.dash
+                player.currentAnim:update(dt)
+            elseif player.isMoving then
+                player.currentAnim = animSet.walk
                 player.currentAnim:update(dt)
             else
-                -- idle frame (frame 2 for standing pose)
-                player.currentAnim:gotoFrame(2)
+                -- idle frame (frame 1 for standing pose)
+                player.currentAnim = animSet.walk
+                player.currentAnim:gotoFrame(1)
             end
         end
     end
 end
 
 function player.draw()
-    if player.currentAnim then
+    if player.currentAnim and player.spriteSheet then
         -- draw sprite animation using anim8
         love.graphics.setColor(1, 1, 1)
         
@@ -277,16 +261,10 @@ function player.draw()
             love.graphics.setColor(1, 1, 1, 0.7)
         end
         
-        -- determine which sprite sheet to use
-        local currentSheet = player.spriteSheetMelee
-        if weapons and weapons.currentWeapon == weapons.GUN then
-            currentSheet = player.spriteSheetGun
-        end
-        
-        -- draw with anim8 (scale up for visibility)
-        local scale = 3.5  -- scale factor to make sprite visible
+        -- draw with anim8 (scale down for proper size)
+        local scale = 0.25  -- scale factor to make sprite fit (189px -> ~47px)
         player.currentAnim:draw(
-            currentSheet,
+            player.spriteSheet,
             player.x + player.width/2,
             player.y + player.height/2,
             nil,  -- rotation
