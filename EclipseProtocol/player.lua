@@ -75,14 +75,14 @@ function player.load()
         -- create animations based on weapon type
         player.animations = {}
         
-        -- row 1: gun animations (walking frames 1-5, dashing frames 6-7)
+        -- row 1: gun animations (walk 3-5, dash 6-7)
         player.animations.gun = {}
-        player.animations.gun.walk = player.anim8.newAnimation(player.grid('1-5', 1), 0.15)
+        player.animations.gun.walk = player.anim8.newAnimation(player.grid('3-5', 1), 0.15)
         player.animations.gun.dash = player.anim8.newAnimation(player.grid('6-7', 1), 0.15)
         
-        -- row 2: melee/knife animations (walking frames 1-5, dashing frames 6-7)
+        -- row 2: melee/knife animations (walk 3-5, dash 6-7)
         player.animations.melee = {}
-        player.animations.melee.walk = player.anim8.newAnimation(player.grid('1-5', 2), 0.15)
+        player.animations.melee.walk = player.anim8.newAnimation(player.grid('3-5', 2), 0.15)
         player.animations.melee.dash = player.anim8.newAnimation(player.grid('6-7', 2), 0.15)
         
         -- set initial animation
