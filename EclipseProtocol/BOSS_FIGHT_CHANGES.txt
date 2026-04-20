@@ -1,0 +1,75 @@
+BOSS FIGHT IMPLEMENTATION - LEVEL 10
+
+=== CHANGES MADE ===
+
+1. NEW FILE: boss.lua
+   - Created a boss enemy system with two phases
+   - Phase 1 (MELEE ONLY): Boss only takes damage from melee attacks (red tint)
+   - Phase 2 (GUN ONLY): Boss only takes damage from gun attacks (blue tint)
+   - Boss is 2x the size of regular enemies (70x70 vs 35x35)
+   - Boss has 500 health (switches phase at 250 health)
+   - Boss has a large health bar displayed at top of screen
+   - Boss moves faster and shoots more aggressively than regular turrets
+   - Boss drops 100 XP, large health pack, and ammo when defeated
+
+2. MODIFIED: main.lua
+   - Added require("boss") to load the boss module
+
+3. MODIFIED: world.lua
+   - Boss spawns at level 10 instead of regular enemies
+   - Door only appears when boss is defeated (along with other enemies)
+   - Enemy counter includes boss when active
+
+4. MODIFIED: states/play.lua
+   - Initialize boss system on game start
+   - Update boss each frame
+   - Check bullet hits on boss (gun damage)
+   - Check melee hits on boss (melee damage)
+   - Boss drops rewards when defeated
+   - Draw boss on screen
+
+5. MODIFIED: weapons.lua
+   - Reduced starting ammo from 100 to 30
+   - Players start with less ammo to make resource management more challenging
+
+6. MODIFIED: pickups.lua
+   - Integrated new visual assets for pickups:
+     * health.png - Health pack sprite
+     * ammo pack.png - Ammo box sprite
+     * coin.png - XP/coin sprite
+   - Added sprite loading in init() function
+   - Updated draw() function to render sprites instead of colored rectangles
+   - Added blinking effect when pickups are about to expire (last 3 seconds)
+   - Adjusted pickup sizes and scales for better visibility
+   - Fallback to colored rectangles if sprites fail to load
+
+=== HOW TO PLAY ===
+
+- Reach level 10 to fight the boss
+- Phase 1 (RED): Use MELEE attacks only (press Q to switch to melee)
+- Phase 2 (BLUE): Use GUN attacks only (press Q to switch to gun)
+- Watch the boss health bar at the top of the screen
+- Boss changes phase at 50% health (250/500)
+- Defeat the boss to clear level 10 and continue
+- Collect pickups that drop from enemies:
+  * Health packs (red cross icon) - Restore health
+  * Ammo boxes (ammo pack icon) - Restore 30 ammo
+  * Coins (gold coin icon) - Gain XP for leveling up
+
+=== BOSS STATS ===
+
+- Health: 500 (250 per phase)
+- Size: 2x regular enemy (70x70)
+- Speed: 120 (faster than turrets)
+- Shoot Cooldown: 1.5 seconds (faster than turrets)
+- Bullet Damage: 15 (higher than turrets)
+- Range: 400 (longer than turrets)
+- Rewards: 100 XP, Large Health Pack, Ammo Pack
+
+=== PICKUP VISUALS ===
+
+- Health packs now display with health.png sprite
+- Ammo boxes now display with ammo pack.png sprite
+- XP/coins now display with coin.png sprite
+- All pickups blink when about to expire
+- Large health packs are 1.2x scale, small are 0.8x scale

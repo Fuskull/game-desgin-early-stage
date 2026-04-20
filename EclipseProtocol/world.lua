@@ -81,24 +81,31 @@ function world.generateRoom()
     enemy.list = {}
     enemy.bullets = {}
     hunter.list = {}
+    boss.clear()
     
-    -- spawn turrets (stationary shooters)
-    local turretCount = math.min(2 + world.roomCount, 5)
-    for i = 1, turretCount do
-        local ex = math.random(200, world.width - 200)
-        local ey = math.random(100, world.height - 100)
-        enemy.create(ex, ey, difficulty)
-    end
-    
-    -- spawn hunters with scaled health
-    local hunterCount = math.min(math.floor(world.roomCount / 2), 3)
-    for i = 1, hunterCount do
-        local hx = math.random(300, world.width - 300)
-        local hy = math.random(150, world.height - 150)
-        local h = hunter.create(hx, hy)
-        -- scale hunter health with room count
-        h.health = 100 + (world.roomCount - 1) * 30
-        h.maxHealth = h.health
+    -- BOSS FIGHT at level 10
+    if world.roomCount == 10 then
+        -- spawn boss in center of room
+        boss.create(world.width / 2 - 35, world.height / 2 - 35)
+    else
+        -- spawn turrets (stationary shooters)
+        local turretCount = math.min(2 + world.roomCount, 5)
+        for i = 1, turretCount do
+            local ex = math.random(200, world.width - 200)
+            local ey = math.random(100, world.height - 100)
+            enemy.create(ex, ey, difficulty)
+        end
+        
+        -- spawn hunters with scaled health
+        local hunterCount = math.min(math.floor(world.roomCount / 2), 3)
+        for i = 1, hunterCount do
+            local hx = math.random(300, world.width - 300)
+            local hy = math.random(150, world.height - 150)
+            local h = hunter.create(hx, hy)
+            -- scale hunter health with room count
+            h.health = 100 + (world.roomCount - 1) * 30
+            h.maxHealth = h.health
+        end
     end
 end
 
@@ -115,8 +122,8 @@ function world.checkDoorCollision(player)
 end
 
 function world.update()
-    -- check if all enemies are dead
-    if #enemy.list == 0 and #hunter.list == 0 then
+    -- check if all enemies are dead (including boss)
+    if #enemy.list == 0 and #hunter.list == 0 and not boss.active then
         world.door.visible = true
     end
 end
@@ -210,6 +217,9 @@ function world.draw()
     
     -- show enemy count
     local totalEnemies = #enemy.list + #hunter.list
+    if boss.active then
+        totalEnemies = totalEnemies + 1
+    end
     if totalEnemies > 0 then
         love.graphics.setColor(1, 0.5, 0.5)
         love.graphics.print("Enemies: " .. totalEnemies, world.width - 100, 10)

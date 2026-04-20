@@ -15,6 +15,7 @@ function play.enter()
         -- initialize game
         player.load()
         enemy.init()  -- initialize turret sprites
+        boss.init()   -- initialize boss sprites
         world.init()
         weapons.init()
         pickups.init()
@@ -41,6 +42,7 @@ function play.loadCustomLevel()
     
     player.load()
     enemy.init()
+    boss.init()
     weapons.init()
     pickups.init()
     progression.init()
@@ -142,6 +144,7 @@ function play.update(dt)
     -- update enemies (turrets need player position)
     enemy.updateAll(dt, player.x + player.width/2, player.y + player.height/2)
     hunter.updateAll(dt, player.x, player.y)
+    boss.update(dt, player.x + player.width/2, player.y + player.height/2)
     
     -- check turret bullet hits on player
     local hitByTurret, turretDamage = enemy.checkBulletCollision(player)
@@ -197,6 +200,20 @@ function play.update(dt)
         end
     end
     
+    -- check bullet hits on boss
+    if boss.active then
+        local hit, damage = boss.checkBulletCollision()
+        if hit then
+            local dead = boss.takeDamage(damage, "gun")
+            if dead then
+                -- boss defeated - drop lots of rewards
+                pickups.spawnXP(boss.instance.x, boss.instance.y, 100)
+                pickups.spawnHealthPack(boss.instance.x + 30, boss.instance.y, true)
+                pickups.spawnAmmo(boss.instance.x - 30, boss.instance.y)
+            end
+        end
+    end
+    
     -- check collisions with hunters
     for i, h in ipairs(hunter.list) do
         if checkCollision(player, h) then
@@ -225,6 +242,7 @@ function play.draw()
     pickups.draw()
     enemy.drawAll()
     hunter.drawAll()
+    boss.draw()
     weapons.draw(player.x, player.y)
     player.draw()
     ui.draw(player.health, player.energy, false, world.roomCount, play.gameTimer)
@@ -312,6 +330,20 @@ function play.mousepressed(x, y, button)
                             if math.random() < 0.6 then
                                 pickups.spawnAmmo(h.x - 20, h.y)
                             end
+                        end
+                    end
+                end
+                
+                -- check melee hits on boss
+                if boss.active then
+                    local hit = boss.checkMeleeHit(player.x, player.y, attackData.range)
+                    if hit then
+                        local dead = boss.takeDamage(attackData.damage, "melee")
+                        if dead then
+                            -- boss defeated - drop lots of rewards
+                            pickups.spawnXP(boss.instance.x, boss.instance.y, 100)
+                            pickups.spawnHealthPack(boss.instance.x + 30, boss.instance.y, true)
+                            pickups.spawnAmmo(boss.instance.x - 30, boss.instance.y)
                         end
                     end
                 end

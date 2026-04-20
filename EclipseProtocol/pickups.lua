@@ -12,18 +12,47 @@ pickups.TYPE_XP = "xp"
 
 function pickups.init()
     pickups.list = {}
+    
+    -- set pixel art filter
+    love.graphics.setDefaultFilter("nearest", "nearest")
+    
+    -- load pickup sprites
+    local successHealth, healthImg = pcall(love.graphics.newImage, "assets/images/health.png")
+    if successHealth then
+        pickups.healthSprite = healthImg
+    else
+        pickups.healthSprite = nil
+        print("Warning: health.png not found")
+    end
+    
+    local successAmmo, ammoImg = pcall(love.graphics.newImage, "assets/images/ammo pack.png")
+    if successAmmo then
+        pickups.ammoSprite = ammoImg
+    else
+        pickups.ammoSprite = nil
+        print("Warning: ammo pack.png not found")
+    end
+    
+    local successCoin, coinImg = pcall(love.graphics.newImage, "assets/images/coin.png")
+    if successCoin then
+        pickups.coinSprite = coinImg
+    else
+        pickups.coinSprite = nil
+        print("Warning: coin.png not found")
+    end
 end
 
 function pickups.spawnHealthPack(x, y, large)
     local pickup = {
         x = x,
         y = y,
-        width = 20,
-        height = 20,
+        width = 25,
+        height = 25,
         type = large and pickups.TYPE_HEALTH_LARGE or pickups.TYPE_HEALTH_SMALL,
         value = large and 100 or 50,
         color = large and {1.0, 0.0, 1.0} or {0.0, 1.0, 0.0},
-        lifetime = 15.0
+        lifetime = 15.0,
+        scale = large and 0.12 or 0.1  -- 0.1 original size
     }
     table.insert(pickups.list, pickup)
 end
@@ -32,12 +61,13 @@ function pickups.spawnAmmo(x, y)
     local pickup = {
         x = x,
         y = y,
-        width = 18,
-        height = 18,
+        width = 25,
+        height = 25,
         type = pickups.TYPE_AMMO,
         value = 30,
         color = {1.0, 0.8, 0.0},
-        lifetime = 15.0
+        lifetime = 15.0,
+        scale = 0.05  -- much smaller
     }
     table.insert(pickups.list, pickup)
 end
@@ -46,12 +76,13 @@ function pickups.spawnXP(x, y, amount)
     local pickup = {
         x = x,
         y = y,
-        width = 15,
-        height = 15,
+        width = 20,
+        height = 20,
         type = pickups.TYPE_XP,
         value = amount or 10,
         color = {0.0, 0.8, 1.0},
-        lifetime = 10.0
+        lifetime = 10.0,
+        scale = 0.04  -- much smaller
     }
     table.insert(pickups.list, pickup)
 end
@@ -86,24 +117,79 @@ end
 
 function pickups.draw()
     for i, pickup in ipairs(pickups.list) do
-        -- draw pickup
-        love.graphics.setColor(pickup.color)
-        love.graphics.rectangle("fill", pickup.x, pickup.y, pickup.width, pickup.height)
+        -- calculate fade effect near end of lifetime
+        local alpha = 1.0
+        if pickup.lifetime < 3.0 then
+            alpha = 0.5 + 0.5 * math.sin(pickup.lifetime * 5)  -- blink effect
+        end
         
-        -- draw border
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.rectangle("line", pickup.x, pickup.y, pickup.width, pickup.height)
+        love.graphics.setColor(1, 1, 1, alpha)
         
-        -- draw icon/text
-        love.graphics.setColor(1, 1, 1, 0.9)
-        if pickup.type == pickups.TYPE_HEALTH_SMALL then
-            love.graphics.print("H", pickup.x + 5, pickup.y + 3)
-        elseif pickup.type == pickups.TYPE_HEALTH_LARGE then
-            love.graphics.print("H+", pickup.x + 3, pickup.y + 3)
+        -- draw sprite based on type
+        if pickup.type == pickups.TYPE_HEALTH_SMALL or pickup.type == pickups.TYPE_HEALTH_LARGE then
+            if pickups.healthSprite then
+                local scale = pickup.scale or 1.0
+                love.graphics.draw(
+                    pickups.healthSprite,
+                    pickup.x + pickup.width/2,
+                    pickup.y + pickup.height/2,
+                    0,
+                    scale,
+                    scale,
+                    pickups.healthSprite:getWidth()/2,
+                    pickups.healthSprite:getHeight()/2
+                )
+            else
+                -- fallback
+                love.graphics.setColor(pickup.color[1], pickup.color[2], pickup.color[3], alpha)
+                love.graphics.rectangle("fill", pickup.x, pickup.y, pickup.width, pickup.height)
+                love.graphics.setColor(1, 1, 1, alpha)
+                love.graphics.rectangle("line", pickup.x, pickup.y, pickup.width, pickup.height)
+                local text = pickup.type == pickups.TYPE_HEALTH_LARGE and "H+" or "H"
+                love.graphics.print(text, pickup.x + 5, pickup.y + 3)
+            end
         elseif pickup.type == pickups.TYPE_AMMO then
-            love.graphics.print("A", pickup.x + 5, pickup.y + 3)
+            if pickups.ammoSprite then
+                local scale = pickup.scale or 1.0
+                love.graphics.draw(
+                    pickups.ammoSprite,
+                    pickup.x + pickup.width/2,
+                    pickup.y + pickup.height/2,
+                    0,
+                    scale,
+                    scale,
+                    pickups.ammoSprite:getWidth()/2,
+                    pickups.ammoSprite:getHeight()/2
+                )
+            else
+                -- fallback
+                love.graphics.setColor(pickup.color[1], pickup.color[2], pickup.color[3], alpha)
+                love.graphics.rectangle("fill", pickup.x, pickup.y, pickup.width, pickup.height)
+                love.graphics.setColor(1, 1, 1, alpha)
+                love.graphics.rectangle("line", pickup.x, pickup.y, pickup.width, pickup.height)
+                love.graphics.print("A", pickup.x + 5, pickup.y + 3)
+            end
         elseif pickup.type == pickups.TYPE_XP then
-            love.graphics.print("XP", pickup.x + 2, pickup.y + 3)
+            if pickups.coinSprite then
+                local scale = pickup.scale or 1.0
+                love.graphics.draw(
+                    pickups.coinSprite,
+                    pickup.x + pickup.width/2,
+                    pickup.y + pickup.height/2,
+                    0,
+                    scale,
+                    scale,
+                    pickups.coinSprite:getWidth()/2,
+                    pickups.coinSprite:getHeight()/2
+                )
+            else
+                -- fallback
+                love.graphics.setColor(pickup.color[1], pickup.color[2], pickup.color[3], alpha)
+                love.graphics.rectangle("fill", pickup.x, pickup.y, pickup.width, pickup.height)
+                love.graphics.setColor(1, 1, 1, alpha)
+                love.graphics.rectangle("line", pickup.x, pickup.y, pickup.width, pickup.height)
+                love.graphics.print("XP", pickup.x + 2, pickup.y + 3)
+            end
         end
     end
 end

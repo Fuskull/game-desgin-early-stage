@@ -5,6 +5,7 @@
 require("player")
 require("enemy")
 require("hunter")
+require("boss")
 require("ui")
 require("world")
 require("weapons")

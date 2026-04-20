@@ -30,7 +30,7 @@ function weapons.init()
     weapons.bulletSpeed = 400
     weapons.magazineSize = 5  -- NEW: 5 bullets per magazine
     weapons.currentMag = 5    -- bullets in current magazine
-    weapons.ammo = 100        -- total reserve ammo
+    weapons.ammo = 30         -- starting ammo reduced to 30
     weapons.maxAmmo = 100
     weapons.multiShot = 1
     weapons.reloading = false
